@@ -1,0 +1,32 @@
+[
+    {
+        "plant_id": "7aec065e-87b0-46c4-84c9-6b1cd07c1392",
+        "scientific_name": "Polyscias filicifolia (C.Moore ex E.Fourn.) L.H.Bailey",
+        "common_names": [],
+        "genus": "Polyscias",
+        "family": "Araliaceae",
+        "score": 0.21615,
+        "location": {
+            "lat": 28.6139,
+            "lng": 77.209
+        },
+        "last_watered": "2025-05-10 12:07:28.047639",
+        "last_health_check": "2025-05-10 12:07:28.050012",
+        "health_note": "Looks healthy!",
+        "quests": [
+            {
+                "type": "Watering",
+                "points": 10
+            },
+            {
+                "type": "Photo Upload",
+                "points": 15
+            },
+            {
+                "type": "Clean Area",
+                "points": 20
+            }
+        ],
+        "timestamp": "2025-05-10 12:07:28.043873"
+    }
+]

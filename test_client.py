@@ -4,7 +4,7 @@ BASE = "http://127.0.0.1:5000"
 
 # ✅ 1. Register Plant
 def test_register_plant():
-    with open("test_image.jpeg", "rb") as img:
+    with open("/workspaces/plantQuestAPI/neem.jpeg", "rb") as img:
         data = {
             "latitude": "28.6139",
             "longitude": "77.2090"
