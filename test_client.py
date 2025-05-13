@@ -1,46 +1,45 @@
 import requests
+import json
 
-BASE = "http://127.0.0.1:5000"
+# Replace this with your local or deployed server URL
+BASE_URL = "http://localhost:5000"
 
-# ✅ 1. Register Plant
+# Sample test image path (this should exist locally)
+TEST_IMAGE_PATH = "/workspaces/plantQuestAPI/Uploads/neem.jpeg"  # Change to your actual image path
+
+# Uploading the image to simulate and send image_path to API
+def simulate_upload(image_path):
+    # Save image locally or simulate a public URL if deployed elsewhere
+    return image_path
+
+# 1. Test /api/check-health endpoint
+def test_check_health():
+    image_path = simulate_upload(TEST_IMAGE_PATH)
+    payload = {"image_path": image_path}
+    response = requests.post(f"{BASE_URL}/api/check-health", json=payload)
+    
+    print("\n[TEST] /api/check-health")
+    print("Status Code:", response.status_code)
+    print("Response:", json.dumps(response.json(), indent=2))
+
+
+# 2. Test /api/register-plant endpoint
 def test_register_plant():
-    with open("/workspaces/plantQuestAPI/neem.jpeg", "rb") as img:
-        data = {
-            "latitude": "28.6139",
-            "longitude": "77.2090"
-        }
-        files = {
-            "image": ("test_image.jpeg", img, "image/jpeg")
-        }
-        res = requests.post(f"{BASE}/register_plant", files=files, data=data)
-        print(res.json())
-        return res.json().get("plant_id")
+    image_path = simulate_upload(TEST_IMAGE_PATH)
+    payload = {
+        "user_id": "uid123",
+        "lat": 26.8467,
+        "lng": 80.9462,
+        "image_path": image_path
+    }
+    response = requests.post(f"{BASE_URL}/api/register-plant", json=payload)
 
-# ✅ 2. Water Plant
-def test_water_plant(plant_id):
-    res = requests.post(f"{BASE}/water_plant", json={"plant_id": plant_id})
-    print(res.json())
+    print("\n[TEST] /api/register-plant")
+    print("Status Code:", response.status_code)
+    print("Response:", json.dumps(response.json(), indent=2))
 
-# ✅ 3. Health Check
-def test_health_check(plant_id):
-    res = requests.post(f"{BASE}/health_check", json={"plant_id": plant_id, "note": "Looks healthy!"})
-    print(res.json())
 
-# ✅ 4. Generate Quests
-def test_generate_quests(plant_id):
-    res = requests.post(f"{BASE}/generate_quests", json={"plant_id": plant_id})
-    print(res.json())
-
-# ✅ 5. View Plant Info
-def test_view(plant_id):
-    res = requests.get(f"{BASE}/plant/{plant_id}")
-    print(res.json())
-
-# Run All Tests
+# Run tests
 if __name__ == "__main__":
-    pid = test_register_plant()
-    if pid:
-        test_water_plant(pid)
-        test_health_check(pid)
-        test_generate_quests(pid)
-        test_view(pid)
+    test_check_health()
+    test_register_plant()
