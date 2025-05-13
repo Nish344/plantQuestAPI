@@ -5,7 +5,7 @@ import json
 BASE_URL = "http://localhost:5000"
 
 # Sample test image path (this should exist locally)
-TEST_IMAGE_PATH = "/workspaces/plantQuestAPI/Uploads/neem.jpeg"  # Change to your actual image path
+TEST_IMAGE_PATH = "/workspaces/plantQuestAPI/neem.jpeg"  # Change to your actual image path
 
 # Uploading the image to simulate and send image_path to API
 def simulate_upload(image_path):
@@ -28,8 +28,8 @@ def test_register_plant():
     image_path = simulate_upload(TEST_IMAGE_PATH)
     payload = {
         "user_id": "uid123",
-        "lat": 26.8467,
-        "lng": 80.9462,
+        "lat": 16.8467,
+        "lng": 78.9462,
         "image_path": image_path
     }
     response = requests.post(f"{BASE_URL}/api/register-plant", json=payload)
