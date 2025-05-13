@@ -1,29 +1,22 @@
-from flask import Flask, request, jsonify
+from flask import Blueprint, request, jsonify
 import os
 import uuid
 import base64
-import firebase_admin
-from firebase_admin import credentials, firestore
+from firebase_admin import firestore
 from kindwise import PlantApi
 import datetime
 from PIL import Image
 import imagehash
 
-app = Flask(__name__)
-
-# Initialize Firebase
-if not firebase_admin._apps:
-    cred = credentials.Certificate("./plantquest-8a4bd-firebase-adminsdk-fbsvc-ffc04c7186.json")
-    firebase_admin.initialize_app(cred)
-
+plant_routes = Blueprint("plant_routes", __name__)
 db = firestore.client()
-
-# Initialize KindWise Plant API
 plant_api = PlantApi('lSVhhyMnVjzP6qmP4N0O0pUDvf7I16BOS3wY5Mww6vzpDSNiaf')
+
 
 def encode_image_base64(image_path):
     with open(image_path, "rb") as img_file:
         return base64.b64encode(img_file.read()).decode('utf-8')
+
 
 def is_similar_image(new_image_path, existing_base64, threshold=5):
     new_hash = imagehash.average_hash(Image.open(new_image_path))
@@ -33,6 +26,7 @@ def is_similar_image(new_image_path, existing_base64, threshold=5):
     existing_hash = imagehash.average_hash(Image.open("temp_compare.jpg"))
     os.remove("temp_compare.jpg")
     return abs(new_hash - existing_hash) <= threshold
+
 
 def get_nearby_plants(lat, lng, radius_deg=0.00003):
     lower_lat = lat - radius_deg
@@ -47,6 +41,7 @@ def get_nearby_plants(lat, lng, radius_deg=0.00003):
         if lower_lng <= data["location"]["lng"] <= upper_lng:
             candidates.append({"id": plant.id, **data})
     return candidates
+
 
 def analyze_plant(image_path):
     try:
@@ -92,7 +87,8 @@ def analyze_plant(image_path):
     except Exception as e:
         return {"is_plant": False, "error": str(e)}
 
-@app.route('/api/check-health', methods=['POST'])
+
+@plant_routes.route('/api/check-health', methods=['POST'])
 def check_health():
     data = request.json
     image_path = data.get("image_path")
@@ -106,7 +102,8 @@ def check_health():
 
     return jsonify({"success": True, "analysis": analysis})
 
-@app.route('/api/register-plant', methods=['POST'])
+
+@plant_routes.route('/api/register-plant', methods=['POST'])
 def register_plant():
     data = request.json
     user_id = data.get("user_id")
@@ -180,9 +177,7 @@ def register_plant():
         "analysis": analysis
     }), 201
 
-@app.route('/api/health', methods=['GET'])
+
+@plant_routes.route('/api/health', methods=['GET'])
 def health_check():
     return jsonify({"status": "healthy", "timestamp": datetime.datetime.now().isoformat()})
-
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)

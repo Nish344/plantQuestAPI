@@ -1,5 +1,5 @@
 import json
-from users_app import app  # Make sure your Flask app is exposed as `app` in app.py
+from app import app  # Make sure your Flask app is exposed as `app` in app.py
 
 client = app.test_client()
 
