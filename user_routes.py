@@ -3,7 +3,7 @@
 from flask import Blueprint, request, jsonify
 from firebase_admin import firestore
 from geopy.distance import geodesic
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
 
 user_bp = Blueprint("user", __name__)
@@ -114,17 +114,32 @@ def complete_quest():
     if not quest_doc.exists:
         return jsonify({"error": "Quest not found"}), 404
 
+    quest_data = quest_doc.to_dict()
+    reward = quest_data.get("reward_points", 0)
+    plant_id = quest_data.get("plant_id")
+    quest_type = quest_data.get("type")
+
+    # 1. Update quest status and proof info
     quest_ref.update({
         "status": "completed",
         "proof_submission.timestamp": firestore.SERVER_TIMESTAMP,
         "proof_submission.verified": True
     })
 
-    reward = quest_doc.to_dict().get("reward_points", 0)
+    # 2. Update user record
     user_ref = db.collection("Users").document(user_id)
     user_ref.update({
         "quests_completed": firestore.ArrayUnion([quest_id]),
         "eco_points": firestore.Increment(reward)
     })
 
-    return jsonify({"message": f"🎉 Quest {quest_id} marked as completed and {reward} points awarded!"})
+    # 3. If quest is "Water Plant", update plant's last_watered field
+    if quest_type == "Water Plant" and plant_id:
+        plant_ref = db.collection("Plants").document(plant_id)
+        plant_ref.update({
+            "last_watered": firestore.SERVER_TIMESTAMP
+        })
+
+    return jsonify({
+        "message": f"🎉 Quest {quest_id} marked as completed and {reward} points awarded!"
+    })

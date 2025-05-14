@@ -4,7 +4,9 @@ import uuid
 import base64
 from firebase_admin import firestore
 from kindwise import PlantApi
+import pytz
 import datetime
+from datetime import timedelta
 from PIL import Image
 import imagehash
 
@@ -87,6 +89,68 @@ def analyze_plant(image_path):
     except Exception as e:
         return {"is_plant": False, "error": str(e)}
 
+
+@plant_routes.route('/generate_quests', methods=['POST'])
+def generate_quests():
+    now = datetime.now(pytz.UTC)
+    today_start = datetime.combine(now.date(), datetime.min.time()).replace(tzinfo=pytz.UTC)
+
+    plants_ref = db.collection("Plants")
+    quests_ref = db.collection("Quests")
+    users_ref = db.collection("Users")
+
+    created_quests = []
+
+    plants = plants_ref.stream()
+    for plant_doc in plants:
+        plant = plant_doc.to_dict()
+        plant_id = plant_doc.id
+        adopted_by = plant.get("adopted_by")
+        last_watered = plant.get("last_watered")
+
+        # Check if a Water Plant quest exists for today
+        existing_quests = quests_ref \
+            .where("plant_id", "==", plant_id) \
+            .where("type", "==", "Water Plant") \
+            .where("created_at", ">=", today_start) \
+            .stream()
+
+        if any(existing_quests):
+            continue  # Skip if quest exists
+
+        # Create the quest
+        quest_data = {
+            "assigned_to": adopted_by or "",
+            "created_at": now,
+            "plant_id": plant_id,
+            "proof_submission": {},
+            "photo_url": None,
+            "verified": False,
+            "reward_points": 50,
+            "status": "pending",
+            "type": "Water Plant"
+        }
+        quest_ref = quests_ref.document()
+        quest_ref.set(quest_data)
+        created_quests.append(quest_ref.id)
+
+        # If plant is adopted and last watered over a day ago, add quest to user's active_quests
+        if adopted_by and last_watered:
+            try:
+                watered_time = last_watered.replace(tzinfo=pytz.UTC)
+                if now - watered_time >= timedelta(days=1):
+                    user_doc_ref = users_ref.document(adopted_by)
+                    user_doc_ref.update({
+                        "active_quests": firestore.ArrayUnion([quest_ref.id])
+                    })
+            except Exception as e:
+                print(f"Error updating active_quests for user {adopted_by}: {e}")
+
+    return jsonify({
+        "status": "success",
+        "quests_created": len(created_quests),
+        "quest_ids": created_quests
+    }), 200
 
 @plant_routes.route('/api/check-health', methods=['POST'])
 def check_health():
