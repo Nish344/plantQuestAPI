@@ -1,5 +1,6 @@
 .venv
 .vscode
 plantquest-8a4bd-firebase-adminsdk-fbsvc-ffc04c7186.json
-__pycache__
+__pycache__/
 env
+test.py

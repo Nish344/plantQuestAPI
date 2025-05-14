@@ -46,7 +46,7 @@ def test_complete_quest():
     print("\n✅ Testing: Complete Quest")
     response = client.post("/user/complete_quest", json={
         "user_id": "uid123",
-        "quest_id": "quest001"
+        "quest_id": "HVxh33jt9FsNX63GxhV6"
     })
     pretty_print(response)
 

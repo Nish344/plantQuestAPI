@@ -119,27 +119,52 @@ def complete_quest():
     plant_id = quest_data.get("plant_id")
     quest_type = quest_data.get("type")
 
-    # 1. Update quest status and proof info
+# 1. Update quest status and proof info
     quest_ref.update({
         "status": "completed",
         "proof_submission.timestamp": firestore.SERVER_TIMESTAMP,
         "proof_submission.verified": True
     })
 
-    # 2. Update user record
+# 2. Update user record
     user_ref = db.collection("Users").document(user_id)
     user_ref.update({
         "quests_completed": firestore.ArrayUnion([quest_id]),
         "eco_points": firestore.Increment(reward)
     })
 
-    # 3. If quest is "Water Plant", update plant's last_watered field
-    if quest_type == "Water Plant" and plant_id:
+# 3. Update the corresponding plant timestamp field
+    if plant_id:
         plant_ref = db.collection("Plants").document(plant_id)
-        plant_ref.update({
-            "last_watered": firestore.SERVER_TIMESTAMP
-        })
+        timestamp_field = None
 
-    return jsonify({
-        "message": f"🎉 Quest {quest_id} marked as completed and {reward} points awarded!"
-    })
+        if quest_type == "Water Plant":
+            timestamp_field = "last_watered"
+        elif quest_type == "Health Assessment":
+            timestamp_field = "last_health_assessment"
+        elif quest_type == "Growth Report":
+            timestamp_field = "last_growth_report"
+        elif quest_type == "Photo Submission":
+            timestamp_field = "last_photo_submission"
+
+        if timestamp_field:
+            plant_ref.update({timestamp_field: firestore.SERVER_TIMESTAMP})
+    
+    # 4. Remove quest ID from plant's "quests" array
+    if plant_id:
+        try:
+            plant_ref.update({
+                "quests": firestore.ArrayRemove([quest_id])
+            })
+        except Exception as e:
+            print(f"Error removing quest {quest_id} from plant {plant_id}: {e}")
+
+    # 5. Remove quest ID from user's "active_quests"
+    try:
+        user_ref.update({
+            "active_quests": firestore.ArrayRemove([quest_id])
+        })
+    except Exception as e:
+        print(f"Error removing quest {quest_id} from user {user_id}'s active quests: {e}")
+
+    return jsonify({ "message": f"🎉 Quest {quest_id} marked as completed and {reward} points awarded!" }), 200
