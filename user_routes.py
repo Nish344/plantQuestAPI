@@ -27,30 +27,32 @@ def update_user_location():
     return jsonify({"message": "📍 Location updated successfully"})
 
 
-
-@user_bp.route("/quests/nearby", methods=["GET"])
+# 🔍 2. Fetch Open Nearby Quests (within 500m)
+@user_bp.route("/quests/nearby", methods=["POST"])
 def get_nearby_quests():
-    user_id = request.args.get("user_id")
-    user_doc = db.collection("Users").document(user_id).get()
-    if not user_doc.exists:
-        return jsonify({"error": "User not found"}), 404
+    data = request.get_json()
+    print(data)
+    user_id = data.get("user_id")
+    lat = data.get("lat")
+    lng = data.get("lng")
 
-    user_loc = user_doc.to_dict().get("location")
-    if not user_loc:
-        return jsonify({"error": "User location not set"}), 400
+    if lat is None or lng is None:
+        return jsonify({"error": "Missing coordinates"}), 400
 
-    user_coords = (user_loc["lat"], user_loc["lng"])
-
+    user_coords = (lat, lng)
     quests = []
+
     for plant_doc in db.collection("Plants").stream():
         plant = plant_doc.to_dict()
         plant_coords = (plant["location"]["lat"], plant["location"]["lng"])
         distance_m = geodesic(user_coords, plant_coords).meters
+
         if distance_m <= 500:
             nearby_quests = db.collection("Quests") \
                 .where("plant_id", "==", plant_doc.id) \
                 .where("status", "==", "pending") \
                 .stream()
+
             for q in nearby_quests:
                 quest = q.to_dict()
                 quest["id"] = q.id
@@ -60,6 +62,7 @@ def get_nearby_quests():
 
 
 
+# 🌱 3. Adopt Nearby Plant
 @user_bp.route("/user/adopt", methods=["POST"])
 def adopt_plant():
     data = request.get_json()
@@ -82,7 +85,7 @@ def adopt_plant():
     return jsonify({"message": f"🌿 Plant {plant_id} adopted by {user_id}!"})
 
 
-
+# ✅ 4. View User Quests by Status
 @user_bp.route("/user/quests", methods=["GET"])
 def view_user_quests():
     user_id = request.args.get("user_id")
@@ -101,12 +104,12 @@ def view_user_quests():
     })
 
 
-
 @user_bp.route("/user/complete_quest", methods=["POST"])
 def complete_quest():
     data = request.get_json()
     quest_id = data.get("quest_id")
     user_id = data.get("user_id")
+    image = data.get("image_proof")
 
     quest_ref = db.collection("Quests").document(quest_id)
     quest_doc = quest_ref.get()
@@ -142,10 +145,6 @@ def complete_quest():
             timestamp_field = "last_watered"
         elif quest_type == "Health Assessment":
             timestamp_field = "last_health_assessment"
-        elif quest_type == "Growth Report":
-            timestamp_field = "last_growth_report"
-        elif quest_type == "Photo Submission":
-            timestamp_field = "last_photo_submission"
 
         if timestamp_field:
             plant_ref.update({timestamp_field: firestore.SERVER_TIMESTAMP})
