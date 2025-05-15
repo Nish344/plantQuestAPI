@@ -11,7 +11,7 @@ import imagehash
 
 plant_routes = Blueprint("plant_routes", __name__)
 db = firestore.client()
-plant_api = PlantApi('vNz9FklJC2nf7O1H8QEiJXcz5lSvRAjoDXkDN8IUaWrrub5mkq')
+plant_api = PlantApi('Kindwise-API-KEY')
 
 
 def encode_image_base64(image_path):
