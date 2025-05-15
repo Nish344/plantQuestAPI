@@ -5,14 +5,13 @@ import base64
 from firebase_admin import firestore
 from kindwise import PlantApi
 import pytz
-import datetime
-from datetime import timedelta
+from datetime import timedelta, datetime
 from PIL import Image
 import imagehash
 
 plant_routes = Blueprint("plant_routes", __name__)
 db = firestore.client()
-plant_api = PlantApi('lSVhhyMnVjzP6qmP4N0O0pUDvf7I16BOS3wY5Mww6vzpDSNiaf')
+plant_api = PlantApi('vNz9FklJC2nf7O1H8QEiJXcz5lSvRAjoDXkDN8IUaWrrub5mkq')
 
 
 def encode_image_base64(image_path):
@@ -147,7 +146,7 @@ def generate_quests():
                 quest_ref.set(quest_data)
                 created_quests.append(quest_ref.id)
 
-                # 🔄 Add quest ID to plant's "quests" field
+                
                 try:
                     plants_ref.document(plant_id).update({
                         "quests": firestore.ArrayUnion([quest_ref.id])
@@ -155,7 +154,7 @@ def generate_quests():
                 except Exception as e:
                     print(f"Error adding quest to plant {plant_id}: {e}")
 
-                # 🔄 Add quest ID to user's "active_quests" field
+                
                 if adopted_by:
                     try:
                         if quest_type == "Water Plant":

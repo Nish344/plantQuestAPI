@@ -5,7 +5,7 @@ import json
 BASE_URL = "http://localhost:5000"
 
 # Sample test image path (this should exist locally)
-TEST_IMAGE_PATH = "./neem.jpeg"  # Change to your actual image path
+TEST_IMAGE_PATH = "./img3.jpg"  # Change to your actual image path
 
 # Uploading the image to simulate and send image_path to API
 def simulate_upload(image_path):

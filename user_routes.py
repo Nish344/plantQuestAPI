@@ -1,4 +1,4 @@
-# user_routes.py
+
 
 from flask import Blueprint, request, jsonify
 from firebase_admin import firestore
@@ -10,7 +10,7 @@ user_bp = Blueprint("user", __name__)
 db = firestore.client()
 timezone = pytz.timezone("Asia/Kolkata")
 
-# 🔁 1. Update User Location
+
 @user_bp.route("/user/location", methods=["POST"])
 def update_user_location():
     data = request.get_json()
@@ -27,7 +27,7 @@ def update_user_location():
     return jsonify({"message": "📍 Location updated successfully"})
 
 
-# 🔍 2. Fetch Open Nearby Quests (within 500m)
+
 @user_bp.route("/quests/nearby", methods=["GET"])
 def get_nearby_quests():
     user_id = request.args.get("user_id")
@@ -59,7 +59,7 @@ def get_nearby_quests():
     return jsonify({"nearby_quests": quests})
 
 
-# 🌱 3. Adopt Nearby Plant
+
 @user_bp.route("/user/adopt", methods=["POST"])
 def adopt_plant():
     data = request.get_json()
@@ -82,7 +82,7 @@ def adopt_plant():
     return jsonify({"message": f"🌿 Plant {plant_id} adopted by {user_id}!"})
 
 
-# ✅ 4. View User Quests by Status
+
 @user_bp.route("/user/quests", methods=["GET"])
 def view_user_quests():
     user_id = request.args.get("user_id")
@@ -101,7 +101,7 @@ def view_user_quests():
     })
 
 
-# 🧪 5. Dummy Quest Completion
+
 @user_bp.route("/user/complete_quest", methods=["POST"])
 def complete_quest():
     data = request.get_json()
@@ -119,21 +119,21 @@ def complete_quest():
     plant_id = quest_data.get("plant_id")
     quest_type = quest_data.get("type")
 
-# 1. Update quest status and proof info
+
     quest_ref.update({
         "status": "completed",
         "proof_submission.timestamp": firestore.SERVER_TIMESTAMP,
         "proof_submission.verified": True
     })
 
-# 2. Update user record
+
     user_ref = db.collection("Users").document(user_id)
     user_ref.update({
         "quests_completed": firestore.ArrayUnion([quest_id]),
         "eco_points": firestore.Increment(reward)
     })
 
-# 3. Update the corresponding plant timestamp field
+
     if plant_id:
         plant_ref = db.collection("Plants").document(plant_id)
         timestamp_field = None
@@ -150,7 +150,7 @@ def complete_quest():
         if timestamp_field:
             plant_ref.update({timestamp_field: firestore.SERVER_TIMESTAMP})
     
-    # 4. Remove quest ID from plant's "quests" array
+    
     if plant_id:
         try:
             plant_ref.update({
@@ -159,7 +159,7 @@ def complete_quest():
         except Exception as e:
             print(f"Error removing quest {quest_id} from plant {plant_id}: {e}")
 
-    # 5. Remove quest ID from user's "active_quests"
+    
     try:
         user_ref.update({
             "active_quests": firestore.ArrayRemove([quest_id])
