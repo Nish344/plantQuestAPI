@@ -1,4 +1,3 @@
-```
 # 🌱 PlantQuest API
 
 A Flask-based backend for gamified plant adoption, health monitoring, and care using AI and Firebase. The system allows users to adopt plants, complete quests (e.g., watering, assessment), and chat with their plants using a Gemini-powered persona chatbot.
@@ -30,18 +29,16 @@ A Flask-based backend for gamified plant adoption, health monitoring, and care u
 ## 📁 Project Structure
 
 ```
-
 plantquest-api/
 │
 ├── app.py                        # Flask app setup
-├── plant\_routes.py              # Plant logic (register, health check, quests)
-├── user\_routes.py               # User-related endpoints (not shown here)
+├── plant_routes.py              # Plant logic (register, health check, quests)
+├── user_routes.py               # User-related endpoints (not shown here)
 ├── chatbot.py                   # Gemini chatbot logic
 ├── requirements.txt             # Python dependencies
 ├── README.md                    # You're here 🌿
-└── plantquest-\*.json            # Firebase Admin SDK credentials
-
-````
+└── plantquest-*.json            # Firebase Admin SDK credentials
+```
 
 ---
 
@@ -51,7 +48,7 @@ plantquest-api/
 
 ```bash
 pip install -r requirements.txt
-````
+```
 
 > Make sure you have Python 3.8+ installed.
 
@@ -59,9 +56,9 @@ pip install -r requirements.txt
 
 ### 2. 🔑 Setup Firebase Admin SDK
 
-* Download the Firebase Admin SDK JSON file.
-* Rename it if needed and place it in the root directory.
-* Update the path in `app.py` and `chatbot.py`:
+- Download the Firebase Admin SDK JSON file.
+- Rename it if needed and place it in the root directory.
+- Update the path in `app.py` and `chatbot.py`:
 
 ```python
 credentials.Certificate("plantquest-...json")
@@ -71,8 +68,8 @@ credentials.Certificate("plantquest-...json")
 
 ### 3. 🔐 Add API Keys
 
-* **KindWise API Key** (used in `plant_routes.py`)
-* **Gemini API Key** (used in `chatbot.py`)
+- **KindWise API Key** (used in `plant_routes.py`)
+- **Gemini API Key** (used in `chatbot.py`)
 
 Update:
 
@@ -161,26 +158,22 @@ App runs on: `http://0.0.0.0:5000`
 
 ## ✅ Future Improvements
 
-* Add user authentication via Firebase Auth
-* Expand chatbot with memory and multi-turn context
-* Add weather-based reminders and local recommendations
-* Push notification support
+- Add user authentication via Firebase Auth
+- Expand chatbot with memory and multi-turn context
+- Add weather-based reminders and local recommendations
+- Push notification support
 
 ---
 
 ## 🧑‍💻 Authors
 
-**Nishanth Antony**
-**Prajwal S**
-**Nikhil R**
-**Aryan Mishra**
+- **Nishanth Antony**  
+- **Prajwal S**  
+- **Nikhil R**  
+- **Aryan Mishra**
 
 ---
 
 ## 📄 License
 
 MIT License – feel free to fork, extend, and plant something amazing 🌼
-
-```
-
-
