@@ -103,13 +103,34 @@ def view_user_quests():
         ]
     })
 
+@user_bp.route("/user/accept", methods=["POST"])
+def accept_quest():
+    data = request.get_json()
+    user_id = data.get("user_id")
+    quest_id = data.get("quest_id")
+
+    if not user_id or not quest_id:
+        return jsonify({"error": "Missing user_id or quest_id"}), 400
+
+    quest_ref = db.collection("Quests").document(quest_id)
+    quest = quest_ref.get()
+
+    if not quest.exists:
+        return jsonify({"error": "Quest not found"}), 404
+
+    # Update the quest document
+    quest_ref.update({
+        "assigned_to": user_id,
+        "status": "assigned"
+    })
+
+    return jsonify({"message": "Quest accepted successfully"}), 200
 
 @user_bp.route("/user/complete_quest", methods=["POST"])
 def complete_quest():
     data = request.get_json()
     quest_id = data.get("quest_id")
     user_id = data.get("user_id")
-    image = data.get("image_proof")
 
     quest_ref = db.collection("Quests").document(quest_id)
     quest_doc = quest_ref.get()
