@@ -9,7 +9,7 @@ firebase_admin.initialize_app(cred)
 db = firestore.client()
 
 # Gemini API setup
-genai.configure(api_key="AIzaSyDSqBZ97mauA84qnWYCXot-3ChNjXPJ8c0")  # 🔁 Replace with your Gemini API Key
+genai.configure(api_key="GEMINI-API-KEY")  
 model = genai.GenerativeModel("gemini-2.0-flash-lite-001")
 
 
@@ -91,7 +91,7 @@ def plant_chatbot(plant_id, user_question):
 
 # ========== ✅ USAGE ==========
 if __name__ == "__main__":
-    plant_id = "plant_b2eb9419"  # 🔁 Replace with the plant ID you want
+    plant_id = "plant_id"  
     while True:
         question = input("Ask your plant a question (or type 'exit'): ")
         if question.lower() == "exit":
