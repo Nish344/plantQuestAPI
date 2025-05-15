@@ -10,6 +10,7 @@ from PIL import Image
 import imagehash
 from io import BytesIO
 import base64
+from check import video_contains_plant, save_first_frame
 
 plant_routes = Blueprint("plant_routes", __name__)
 db = firestore.client()
@@ -220,15 +221,41 @@ def check_health():
 
 @plant_routes.route('/api/register-plant', methods=['POST'])
 def register_plant():
-    data = request.json
+    data = request.form
     user_id = data.get("user_id")
     lat = float(data.get("lat"))
     lng = float(data.get("lng"))
     original_base64 = data.get("image_base64")
+
+    video = request.files.get("video")
+
+    if video:
+        video_path = f"temp_video_{uuid.uuid4().hex[:6]}.mp4"
+        video.save(video_path)
+
+        result = video_contains_plant(video_path)
+        if not result:
+            os.remove(video_path)
+            return jsonify({"success": False, "error": "No plant detected in the video."}), 400
+
+        try:
+            saved_path = save_first_frame(video_path, "extracted_frame.png", "png")
+            print(f"First frame saved to: {saved_path}")
+            # Use the extracted frame for image_base64 if original was not provided
+            with open(saved_path, "rb") as f:
+                frame_data = f.read()
+                original_base64 = base64.b64encode(frame_data).decode()
+            os.remove(saved_path)
+        except Exception as e:
+            os.remove(video_path)
+            return jsonify({"success": False, "error": f"Failed to extract frame: {str(e)}"}), 500
+
+        os.remove(video_path)
+
     if not original_base64:
         return jsonify({"success": False, "error": "Image missing"}), 400
 
-    # Compress image to reduce Firestore size usage
+    # Now continue with image-based analysis
     image_base64 = compress_and_encode_image(original_base64)
 
     if not all([user_id, lat, lng, image_base64]):
