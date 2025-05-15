@@ -8,10 +8,36 @@ import pytz
 from datetime import timedelta, datetime
 from PIL import Image
 import imagehash
+from io import BytesIO
+import base64
 
 plant_routes = Blueprint("plant_routes", __name__)
 db = firestore.client()
 plant_api = PlantApi('vNz9FklJC2nf7O1H8QEiJXcz5lSvRAjoDXkDN8IUaWrrub5mkq')
+
+
+
+
+def compress_and_encode_image(base64_string, max_size=(512, 512), quality=70):
+    # Decode base64 to image
+    image_data = base64.b64decode(base64_string)
+    image = Image.open(BytesIO(image_data))
+
+    # Convert to RGB to avoid mode errors (e.g., from PNG)
+    if image.mode != "RGB":
+        image = image.convert("RGB")
+
+    # Resize image (maintain aspect ratio)
+    image.thumbnail(max_size)
+
+    # Save to BytesIO with reduced quality
+    buffer = BytesIO()
+    image.save(buffer, format="JPEG", quality=quality, optimize=True)
+    compressed_bytes = buffer.getvalue()
+
+    # Encode to base64 again
+    return base64.b64encode(compressed_bytes).decode("utf-8")
+
 
 
 def encode_image_base64(image_path):
@@ -19,8 +45,8 @@ def encode_image_base64(image_path):
         return base64.b64encode(img_file.read()).decode('utf-8')
 
 
-def is_similar_image(new_image_path, existing_base64, threshold=5):
-    new_hash = imagehash.average_hash(Image.open(new_image_path))
+def is_similar_image(image_path, existing_base64, threshold=5):
+    new_hash = imagehash.average_hash(Image.open(image_path))
     existing_image_data = base64.b64decode(existing_base64)
     with open("temp_compare.jpg", "wb") as f:
         f.write(existing_image_data)
@@ -198,13 +224,24 @@ def register_plant():
     user_id = data.get("user_id")
     lat = float(data.get("lat"))
     lng = float(data.get("lng"))
-    image_path = data.get("image_path")
+    original_base64 = data.get("image_base64")
+    if not original_base64:
+        return jsonify({"success": False, "error": "Image missing"}), 400
 
-    if not all([user_id, lat, lng, image_path]) or not os.path.exists(image_path):
+    # Compress image to reduce Firestore size usage
+    image_base64 = compress_and_encode_image(original_base64)
+
+    if not all([user_id, lat, lng, image_base64]):
         return jsonify({"success": False, "error": "Missing or invalid fields"}), 400
 
-    analysis = analyze_plant(image_path)
+    # Save base64 image temporarily for processing
+    temp_image_path = "temp_uploaded.jpg"
+    with open(temp_image_path, "wb") as f:
+        f.write(base64.b64decode(image_base64))
+
+    analysis = analyze_plant(temp_image_path)
     if not analysis.get("is_plant", False):
+        os.remove(temp_image_path)
         return jsonify({"success": False, "error": analysis.get("error")}), 400
 
     species = analysis["suggestions"][0]["name"] if analysis["suggestions"] else "Unknown"
@@ -214,11 +251,11 @@ def register_plant():
     health_status = analysis.get("health_status", "unknown")
 
     nearby = get_nearby_plants(lat, lng)
-    new_image_base64 = encode_image_base64(image_path)
 
     for existing in nearby:
         if existing.get("species", "").lower() == species.lower():
-            if "image_base64" in existing and is_similar_image(image_path, existing["image_base64"]):
+            if "image_base64" in existing and is_similar_image(image_base64, existing["image_base64"]):
+                os.remove(temp_image_path)
                 return jsonify({
                     "success": False,
                     "error": f"Duplicate plant detected nearby (Species: {species})."
@@ -235,7 +272,7 @@ def register_plant():
         "adopted_by": None,
         "quests": [],
         "added_by": user_id,
-        "image_base64": new_image_base64,
+        "image_base64": image_base64,
         "registered_date": firestore.SERVER_TIMESTAMP,
         "diseases": diseases
     })
@@ -249,7 +286,7 @@ def register_plant():
     db.collection("Photos").document(photo_id).set({
         "user_id": user_id,
         "plant_id": plant_id,
-        "image_url": image_path,
+        "image_url": None,  # You can store a URL if image is uploaded to cloud
         "ai_analysis": {
             "species": species,
             "health_status": health_status,
@@ -257,6 +294,8 @@ def register_plant():
         },
         "timestamp": firestore.SERVER_TIMESTAMP
     })
+
+    os.remove(temp_image_path)
 
     return jsonify({
         "success": True,

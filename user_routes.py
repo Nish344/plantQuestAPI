@@ -45,8 +45,8 @@ def get_nearby_quests():
     for plant_doc in db.collection("Plants").stream():
         plant = plant_doc.to_dict()
         plant_coords = (plant["location"]["lat"], plant["location"]["lng"])
+        print(plant_coords)
         distance_m = geodesic(user_coords, plant_coords).meters
-
         if distance_m <= 500:
             nearby_quests = db.collection("Quests") \
                 .where("plant_id", "==", plant_doc.id) \

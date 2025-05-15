@@ -4,7 +4,7 @@ import google.generativeai as genai
 
 # ========== 🔐 CONFIG SECTION ==========
 # Firebase Admin SDK setup
-cred = credentials.Certificate("/workspaces/plantQuestAPI/plantquest-8a4bd-firebase-adminsdk-fbsvc-ffc04c7186.json")  # 🔁 Replace with your actual path
+cred = credentials.Certificate("./plantquest-8a4bd-firebase-adminsdk-fbsvc-ffc04c7186.json")  # 🔁 Replace with your actual path
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
