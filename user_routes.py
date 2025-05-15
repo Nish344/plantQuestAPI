@@ -166,6 +166,7 @@ def complete_quest():
             timestamp_field = "last_watered"
         elif quest_type == "Health Assessment":
             timestamp_field = "last_health_assessment"
+            generate_health_report.verify_image(image)
 
         if timestamp_field:
             plant_ref.update({timestamp_field: firestore.SERVER_TIMESTAMP})

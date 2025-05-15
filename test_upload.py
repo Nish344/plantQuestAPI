@@ -8,7 +8,7 @@ user_id = "uid123"
 lat = 122.9716
 lng = 10.5946
 
-img_paths = ["img1.jpg", "img2.jpg"]
+img_paths = ["extracted_frame.png", "img2.jpg"]
 
 def register_plant(image_path):
     payload = {
