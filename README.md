@@ -1,4 +1,4 @@
-```markdown
+```
 # 🌱 PlantQuest API
 
 A Flask-based backend for gamified plant adoption, health monitoring, and care using AI and Firebase. The system allows users to adopt plants, complete quests (e.g., watering, assessment), and chat with their plants using a Gemini-powered persona chatbot.
