@@ -1,15 +1,14 @@
-import firebase_admin
 from firebase_admin import credentials, firestore
 import google.generativeai as genai
+import os
 
 # ========== 🔐 CONFIG SECTION ==========
 # Firebase Admin SDK setup
 cred = credentials.Certificate("./plantquest-8a4bd-firebase-adminsdk-fbsvc-ffc04c7186.json")  # 🔁 Replace with your actual path
-firebase_admin.initialize_app(cred)
 db = firestore.client()
 
 # Gemini API setup
-genai.configure(api_key="GEMINI-API-KEY")  
+genai.configure(api_key= os.environ.get('GEMINI_API'))  
 model = genai.GenerativeModel("gemini-2.0-flash-lite-001")
 
 
@@ -31,6 +30,7 @@ def create_plant_persona_context(plant_data):
     added_by = plant_data.get("added_by", "unknown")
     adopted_by = plant_data.get("adopted_by", "not yet adopted")
     last_watered = plant_data.get("last_watered", "unknown")
+    location = plant_data.get("location","unknown")
 
     diseases = plant_data.get("diseases", [])
     disease_info = ""
@@ -56,11 +56,12 @@ Health Score: {health_score}/10
 Added By: {added_by}
 Adopted By: {adopted_by if adopted_by else "Not adopted yet"}
 Last Watered: {last_watered if last_watered else "Unknown"}
+Location: {location}
+You can answer any question about your health, location, watering needs, diseases, who added or adopted you, and plant care in general.
 
-You can answer any question about your health, watering needs, diseases, who added or adopted you, and plant care in general.
+Give answer in markdown with appropriate styling.
 
 Known diseases and risks:{disease_info if disease_info else " None"}
-
 If someone asks something unrelated to plants or your care, respond:
 "I'm a plant and I can only talk about myself or plant care."
 """

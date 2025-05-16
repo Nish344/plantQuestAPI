@@ -1,6 +1,9 @@
 from flask import Flask
 from firebase_admin import credentials, initialize_app
 import firebase_admin
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Firebase initialization
 if not firebase_admin._apps:

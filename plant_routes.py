@@ -11,10 +11,11 @@ import imagehash
 from io import BytesIO
 import base64
 from check import video_contains_plant, save_first_frame
+from plant_chatbot import plant_chatbot
 
 plant_routes = Blueprint("plant_routes", __name__)
 db = firestore.client()
-plant_api = PlantApi('Kindwise-API-KEY')
+plant_api = PlantApi(os.environ.get('PLANT_API'))
 
 
 
@@ -76,7 +77,7 @@ def analyze_plant(image_path):
         result = {}
         identification = plant_api.identify(image_path, details=['url', 'common_names'])
         if not identification.result.is_plant.binary:
-            return {"is_plant": False, "error": "Image does not appear to be a plant."}
+            return {"is_plant": False, "error": "It  doesn't appear to be a plant."}
 
         suggestions = [
             {
@@ -114,6 +115,38 @@ def analyze_plant(image_path):
 
     except Exception as e:
         return {"is_plant": False, "error": str(e)}
+
+
+@plant_routes.route('/chatbot', methods=['POST'])
+def chatbot():
+    try:
+        data = request.get_json()
+
+        if not data:
+            return jsonify({"success": False, "error": "Missing JSON body"}), 400
+
+        plant_id = data.get('plant_id')
+        question = data.get('question')
+
+        if not plant_id or not question:
+            return jsonify({"success": False, "error": "Missing 'plant_id' or 'question'"}), 400
+
+        # Call the chatbot logic
+        answer = plant_chatbot(plant_id, question)
+
+        return jsonify({
+            "success": True,
+            "plant_id": plant_id,
+            "question": question,
+            "answer": answer
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
 
 
 @plant_routes.route('/generate_quests', methods=['POST'])
@@ -226,13 +259,12 @@ def register_plant():
     lat = float(data.get("lat"))
     lng = float(data.get("lng"))
     original_base64 = data.get("image_base64")
-
     video = request.files.get("video")
-
+    print(user_id,lat,lng)
     if video:
         video_path = f"temp_video_{uuid.uuid4().hex[:6]}.mp4"
         video.save(video_path)
-
+        print(video_path)
         result = video_contains_plant(video_path)
         if not result:
             os.remove(video_path)
